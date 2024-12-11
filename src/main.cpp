@@ -3,13 +3,15 @@
 #include <SDL_blendmode.h>
 #include <SDL_rect.h>
 #include <SDL_render.h>
+#include <format>
 #include <iostream>
 #include <vector>
-#include <format>
 
+#include "ImGuiTheme.hpp"
 #include "imgui.h"
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_sdlrenderer2.h"
+#include "window/MenuBar.hpp"
 #include "window/TemplatesWindow.hpp"
 
 SDL_Window *window;
@@ -33,6 +35,9 @@ void initSDL() {
 
   ImGuiIO &io = ImGui::GetIO();
   io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+  ImFont *customFont =
+      io.Fonts->AddFontFromFileTTF("res/Roboto-Regular.ttf", 30.0f);
+  ;
 }
 
 int main(int argc, char *argv[]) {
@@ -58,6 +63,8 @@ int main(int argc, char *argv[]) {
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
 
+    applyTheme();
+
     // Create the dockspace
     ImGui::PushStyleColor(
         ImGuiCol_DockingEmptyBg,
@@ -72,6 +79,7 @@ int main(int argc, char *argv[]) {
         ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
     ImGui::PopStyleColor(3); // Pop the three style colors that were pushed
 
+    menuBar();
     templatesWindow();
 
     ImGui::ShowDemoWindow();

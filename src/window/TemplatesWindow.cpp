@@ -20,54 +20,8 @@
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_sdlrenderer2.h"
 
-enum class PropertyType {
-  Decimal = 0,
-  Integer = 1,
-  Checkbox = 2,
-  Text = 3,
-  Filepath = 4,
-  Color = 5
-};
-
-static float colorTest[3] = {255, 255, 255};
-
-struct Property {
-  Property(PropertyType type) : type(type) {
-    switch (type) {
-    case PropertyType::Decimal:
-      value = (float)0.0;
-      break;
-    case PropertyType::Integer:
-      value = (int)0;
-      break;
-    case PropertyType::Checkbox:
-      value = false;
-      break;
-    case PropertyType::Text:
-      value = (std::string) "";
-      break;
-    case PropertyType::Filepath:
-      value = (std::string) "";
-      break;
-    case PropertyType::Color:
-      value = std::array<float, 3>({255, 255, 255});
-      break;
-    }
-  }
-
-  std::string name = "";
-  const PropertyType type;
-  std::any value;
-};
-
-struct Template {
-  Template(std::string name) : name(name) {}
-  std::string name;
-  std::vector<Property *> properties;
-};
-
-static int selectedTemplate;
-std::vector<Template> templates = {{"Player"}, {"Slime"}, {"Chest"}};
+#include "../Property.hpp"
+#include "../Template.hpp"
 
 void templatesWindow() {
   ImGui::Begin("Templates");

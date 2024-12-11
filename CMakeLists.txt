@@ -18,6 +18,7 @@ add_executable(index
 
 target_include_directories(index PUBLIC
   ${PROJECT_SOURCE_DIR}/include/imgui
+  /usr/include/nlohmann
 )
 
 target_link_libraries(index SDL2::SDL2 SDL2_image::SDL2_image)
