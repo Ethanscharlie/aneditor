@@ -46,6 +46,9 @@ void templatesWindow() {
                         ImVec2(0, -ImGui::GetFrameHeightWithSpacing()));
       ImGui::Text(templates[selectedTemplate].name.c_str());
 
+      auto &editorColor = templates[selectedTemplate].editorColor;
+      ImGui::ColorEdit3("###EditorColorSelect", editorColor.data());
+
       ImGui::Separator();
 
       ImGui::Text("Properties");

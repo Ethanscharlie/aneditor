@@ -13,6 +13,7 @@
 #include "imgui_impl_sdlrenderer2.h"
 #include "window/MenuBar.hpp"
 #include "window/TemplatesWindow.hpp"
+#include "window/WorldWindow.hpp"
 
 SDL_Window *window;
 SDL_Renderer *renderer;
@@ -36,7 +37,7 @@ void initSDL() {
   ImGuiIO &io = ImGui::GetIO();
   io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
   ImFont *customFont =
-      io.Fonts->AddFontFromFileTTF("res/Roboto-Regular.ttf", 30.0f);
+      io.Fonts->AddFontFromFileTTF("res/Roboto-Regular.ttf", 18.0f);
   ;
 }
 
@@ -80,6 +81,7 @@ int main(int argc, char *argv[]) {
     ImGui::PopStyleColor(3); // Pop the three style colors that were pushed
 
     menuBar();
+    worldWindow();
     templatesWindow();
 
     ImGui::ShowDemoWindow();
