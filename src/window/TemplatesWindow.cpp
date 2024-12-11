@@ -49,6 +49,9 @@ void templatesWindow() {
       auto &editorColor = templates[selectedTemplate].editorColor;
       ImGui::ColorEdit3("###EditorColorSelect", editorColor.data());
 
+      ImGui::InputFloat("Width", &templates[selectedTemplate].width);
+      ImGui::InputFloat("Height", &templates[selectedTemplate].height);
+
       ImGui::Separator();
 
       ImGui::Text("Properties");

@@ -4,6 +4,7 @@
 #include "../utils.hpp"
 #include "imgui.h"
 #include <cmath>
+#include <cstdio>
 
 static float zoom = 4;
 
@@ -58,11 +59,36 @@ void worldWindow() {
 
     // Add first and second point
     if (is_hovered && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-      TemplateInstance instance =
-          TemplateInstance(&templates[selectedTemplate]);
-      instance.x = (int)(mouse_pos_in_canvas.x / zoom / 16.0) * 16;
-      instance.y = (int)(mouse_pos_in_canvas.y / zoom / 16.0) * 16;
-      templateInstances.push_back(instance);
+      TemplateInstance *hoverInstance = nullptr;
+      int hoverInstanceIndex = -1;
+
+      for (int i = 0; i < templateInstances.size(); i++) {
+        TemplateInstance &instance = templateInstances[i];
+        float x = instance.x * zoom;
+        float y = instance.y * zoom;
+        float w = instance.entityTempate->width * zoom;
+        float h = instance.entityTempate->height * zoom;
+
+        float mx = mouse_pos_in_canvas.x;
+        float my = mouse_pos_in_canvas.y;
+
+        if (mx > x && mx < x + w && my > y && my < y + h) {
+          hoverInstance = &instance;
+          hoverInstanceIndex = i;
+        }
+      }
+
+      if (hoverInstance != nullptr) {
+        templateInstances.erase(templateInstances.begin() + hoverInstanceIndex);
+      }
+
+      else {
+        TemplateInstance instance =
+            TemplateInstance(&templates[selectedTemplate]);
+        instance.x = (int)(mouse_pos_in_canvas.x / zoom / 16.0) * 16;
+        instance.y = (int)(mouse_pos_in_canvas.y / zoom / 16.0) * 16;
+        templateInstances.push_back(instance);
+      }
     }
 
     // Pan (we use a zero mouse threshold when there's no context menu)
