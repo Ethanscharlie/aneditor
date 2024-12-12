@@ -64,9 +64,51 @@ void createProject(const fs::path &destination) {
   std::cout << "Project Created Sucessfully\n";
 }
 
+void loadProject(fs::path _projectPath) {
+  projectPath = _projectPath;
+  fs::path datafile = projectPath / "res" / "EditorData.json";
+  std::ifstream file(datafile);
+  json editorData = json::parse(file);
+  file.close();
+
+  cameraScale = editorData["cameraScale"];
+  zoom = editorData["zoom"];
+
+  for (json &templateJson : editorData["Templates"]) {
+    Template entityTemplate(templateJson["name"]);
+    templates.push_back(entityTemplate);
+  }
+
+  for (json &instanceJson : editorData["instances"]) {
+    std::string name = instanceJson["name"];
+
+    Template* entityTemplate; 
+    for (Template& aTemplate : templates) {
+      if (aTemplate.name == name) {
+        entityTemplate = &aTemplate;
+        break;
+      }
+    }
+
+    if (!entityTemplate) {
+      printf("Could not find template for %s\n", name.c_str());
+      continue;
+    }
+
+    TemplateInstance instance(entityTemplate);
+    instance.x = instanceJson["x"];
+    instance.y = instanceJson["y"];
+
+    templateInstances.push_back(instance);
+  }
+}
+
 void save() {
   fs::path datafile = projectPath / "res" / "EditorData.json";
   json jsondata;
+
+  jsondata["cameraScale"] = cameraScale;
+  jsondata["zoom"] = zoom;
 
   for (Template temp : templates) {
     json templateJson;
@@ -110,6 +152,14 @@ void save() {
     }
 
     jsondata["Templates"].push_back(templateJson);
+  }
+
+  for (TemplateInstance &instance : templateInstances) {
+    json instanceJson;
+    instanceJson["name"] = instance.entityTempate->name;
+    instanceJson["x"] = instance.x;
+    instanceJson["y"] = instance.y;
+    jsondata["instances"].push_back(instanceJson);
   }
 
   std::ofstream file(datafile);

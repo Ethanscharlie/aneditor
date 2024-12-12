@@ -11,6 +11,8 @@
 #include "imgui.h"
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_sdlrenderer2.h"
+#include "utils.hpp"
+#include "window/EditorSettings.hpp"
 #include "window/MenuBar.hpp"
 #include "window/TemplatesWindow.hpp"
 #include "window/WorldWindow.hpp"
@@ -46,6 +48,8 @@ int main(int argc, char *argv[]) {
 
   bool quit = false;
   SDL_Event e;
+
+  loadProject("/home/ethanscharlie/newProject");
 
   while (!quit) {
     while (SDL_PollEvent(&e) != 0) {
@@ -83,6 +87,7 @@ int main(int argc, char *argv[]) {
     menuBar();
     worldWindow();
     templatesWindow();
+    editorSettings();
 
     ImGui::ShowDemoWindow();
 

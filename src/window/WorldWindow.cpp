@@ -6,8 +6,6 @@
 #include <cmath>
 #include <cstdio>
 
-static float zoom = 4;
-
 static void drawRect(int x, int y, int w, int h, ImColor color) {
   int realX = x;
   int realY = y;
@@ -85,8 +83,8 @@ void worldWindow() {
       else {
         TemplateInstance instance =
             TemplateInstance(&templates[selectedTemplate]);
-        instance.x = (int)(mouse_pos_in_canvas.x / zoom / 16.0) * 16;
-        instance.y = (int)(mouse_pos_in_canvas.y / zoom / 16.0) * 16;
+        instance.x = floor(mouse_pos_in_canvas.x / zoom / 16.0) * 16;
+        instance.y = floor(mouse_pos_in_canvas.y / zoom / 16.0) * 16;
         templateInstances.push_back(instance);
       }
     }
@@ -117,14 +115,29 @@ void worldWindow() {
                            ImVec2(canvas_p1.x, canvas_p0.y + y),
                            IM_COL32(200, 200, 200, 40));
     }
-    // for (int n = 0; n < points.Size; n += 2)
-    //   draw_list->AddLine(
-    //       ImVec2(origin.x + points[n].x, origin.y + points[n].y),
-    //       ImVec2(origin.x + points[n + 1].x, origin.y + points[n + 1].y),
-    //       IM_COL32(255, 255, 0, 255), 2.0f);
-    // draw_list->PopClipRect();
-    //
 
+    // Camera lines
+    int cameraX = -screenWidth / 2.0 * zoom / cameraScale;
+    int cameraY = -screenHeight / 2.0 * zoom / cameraScale;
+    int cameraW = screenWidth * zoom / cameraScale;
+    int cameraH = screenHeight * zoom / cameraScale;
+
+    draw_list->AddLine(ImVec2(cameraX + origin.x, cameraY + origin.y),
+                       ImVec2(origin.x + cameraX + cameraW, origin.y + cameraY),
+                       IM_COL32(255, 10, 10, 200));
+    draw_list->AddLine(
+        ImVec2(cameraX + origin.x + cameraW, cameraY + origin.y),
+        ImVec2(origin.x + cameraX + cameraW, origin.y + cameraY + cameraH),
+        IM_COL32(255, 10, 10, 200));
+    draw_list->AddLine(
+        ImVec2(cameraX + origin.x + cameraW, cameraY + origin.y + cameraH),
+        ImVec2(origin.x + cameraX, origin.y + cameraY + cameraH),
+        IM_COL32(255, 10, 10, 200));
+    draw_list->AddLine(ImVec2(cameraX + origin.x, cameraY + origin.y),
+                       ImVec2(origin.x + cameraX, origin.y + cameraY + cameraH),
+                       IM_COL32(255, 10, 10, 200));
+
+    // Entity instances
     for (TemplateInstance instance : templateInstances) {
       int x = instance.x * zoom + origin.x;
       int y = instance.y * zoom + origin.y;

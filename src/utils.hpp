@@ -11,10 +11,14 @@ namespace fs = std::filesystem;
 
 using json = nlohmann::json;
 
-inline fs::path projectPath = "";
+inline fs::path projectPath;
 inline int selectedTemplate;
-inline std::vector<Template> templates = {{"Player"}, {"Slime"}, {"Chest"}};
+inline std::vector<Template> templates;
 inline std::vector<TemplateInstance> templateInstances;
+inline float zoom = 4;
+inline int screenWidth = 1920;
+inline int screenHeight = 1080;
+inline float cameraScale = 2;
 
 namespace ImGui {
 bool InputString(const char *label, std::string *strPtr, size_t bufferSize,
@@ -23,4 +27,5 @@ bool InputString(const char *label, std::string *strPtr, size_t bufferSize,
 
 void createProject(const fs::path &destination);
 
+void loadProject(fs::path _projectPath);
 void save();
