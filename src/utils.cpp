@@ -76,14 +76,19 @@ void loadProject(fs::path _projectPath) {
 
   for (json &templateJson : editorData["Templates"]) {
     Template entityTemplate(templateJson["name"]);
+
+    if (editorData.contains("mainComponent")) {
+      entityTemplate.mainComponent = editorData["mainComponent"];
+    }
+
     templates.push_back(entityTemplate);
   }
 
   for (json &instanceJson : editorData["instances"]) {
     std::string name = instanceJson["name"];
 
-    Template* entityTemplate; 
-    for (Template& aTemplate : templates) {
+    Template *entityTemplate;
+    for (Template &aTemplate : templates) {
       if (aTemplate.name == name) {
         entityTemplate = &aTemplate;
         break;
@@ -113,6 +118,7 @@ void save() {
   for (Template temp : templates) {
     json templateJson;
     templateJson["name"] = temp.name;
+    templateJson["mainComponent"] = temp.mainComponent;
 
     for (Property *property : temp.properties) {
       json propertyJson;
@@ -167,4 +173,37 @@ void save() {
   file.close();
   std::cout << std::format("Project save to {} Sucessfully\n",
                            datafile.string());
+}
+
+void createTemplate() {
+  fs::path sourceFolder = projectPath / "src";
+
+  Template entityTemplate("New Template");
+  createComponent("NewTemplate");
+  entityTemplate.mainComponent = "NewTemplate";
+  templates.push_back(entityTemplate);
+}
+
+void createComponent(std::string name) {
+  fs::path sourceFolder = projectPath / "src";
+
+  std::ofstream headerFile(sourceFolder / std::format("{}.hpp", name));
+  headerFile << "#pragma once" << std::endl;
+  headerFile << "#include \"Charlie2D.hpp\"" << std::endl;
+  headerFile << "#include \"engineUtils.hpp\"" << std::endl;
+  headerFile << "" << std::endl;
+  headerFile << "class " << name << " : public Component {" << std::endl;
+  headerFile << "public:" << std::endl;
+  headerFile << "  void start() override;" << std::endl;
+  headerFile << "  void update(float deltaTime) override;" << std::endl;
+  headerFile << "};" << std::endl;
+  headerFile << "REGISTER_COMPONENT(" << name << ");" << std::endl;
+  headerFile.close();
+
+  std::ofstream sourceFile(sourceFolder / std::format("{}.cpp", name));
+  sourceFile << "#include \"" << name << ".hpp\"" << std::endl;
+  sourceFile << "" << std::endl;
+  sourceFile << "void " << name << "::start() {}" << std::endl;
+  sourceFile << "void " << name << "::update(float deltaTime) {}" << std::endl;
+  sourceFile.close();
 }

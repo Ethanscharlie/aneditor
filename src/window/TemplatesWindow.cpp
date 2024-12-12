@@ -26,6 +26,10 @@
 void templatesWindow() {
   ImGui::Begin("Templates");
   {
+    if (ImGui::Button("Create Template")) {
+      createTemplate();
+    }
+
     ImGui::BeginChild("Templates Left Pane", ImVec2(150, 0),
                       ImGuiChildFlags_Border | ImGuiChildFlags_ResizeX);
     {

@@ -29,3 +29,7 @@ void createProject(const fs::path &destination);
 
 void loadProject(fs::path _projectPath);
 void save();
+
+void createTemplate();
+
+void createComponent(std::string name);
