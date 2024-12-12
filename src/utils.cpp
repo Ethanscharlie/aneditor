@@ -75,10 +75,10 @@ void loadProject(fs::path _projectPath) {
   zoom = editorData["zoom"];
 
   for (json &templateJson : editorData["Templates"]) {
-    Template entityTemplate(templateJson["name"]);
+    Template* entityTemplate = new Template(templateJson["name"]);
 
     if (editorData.contains("mainComponent")) {
-      entityTemplate.mainComponent = editorData["mainComponent"];
+      entityTemplate->mainComponent = editorData["mainComponent"];
     }
 
     templates.push_back(entityTemplate);
@@ -88,9 +88,9 @@ void loadProject(fs::path _projectPath) {
     std::string name = instanceJson["name"];
 
     Template *entityTemplate;
-    for (Template &aTemplate : templates) {
-      if (aTemplate.name == name) {
-        entityTemplate = &aTemplate;
+    for (Template* aTemplate : templates) {
+      if (aTemplate->name == name) {
+        entityTemplate = aTemplate;
         break;
       }
     }
@@ -115,12 +115,12 @@ void save() {
   jsondata["cameraScale"] = cameraScale;
   jsondata["zoom"] = zoom;
 
-  for (Template temp : templates) {
+  for (Template* temp : templates) {
     json templateJson;
-    templateJson["name"] = temp.name;
-    templateJson["mainComponent"] = temp.mainComponent;
+    templateJson["name"] = temp->name;
+    templateJson["mainComponent"] = temp->mainComponent;
 
-    for (Property *property : temp.properties) {
+    for (Property *property : temp->properties) {
       json propertyJson;
       propertyJson["name"] = property->name;
 
@@ -178,9 +178,9 @@ void save() {
 void createTemplate() {
   fs::path sourceFolder = projectPath / "src";
 
-  Template entityTemplate("New Template");
+  Template* entityTemplate = new Template("New Template");
   createComponent("NewTemplate");
-  entityTemplate.mainComponent = "NewTemplate";
+  entityTemplate->mainComponent = "NewTemplate";
   templates.push_back(entityTemplate);
 }
 

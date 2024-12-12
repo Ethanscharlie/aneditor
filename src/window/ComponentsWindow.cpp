@@ -1,6 +1,6 @@
-#include "TemplatesWindow.hpp"
-
+#include "ComponentsWindow.hpp"
 #include "../utils.hpp"
+#include "imgui.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL_blendmode.h>
@@ -8,6 +8,8 @@
 #include <SDL_render.h>
 #include <any>
 #include <cstdint>
+#include <cstdio>
+#include <cstring>
 #include <format>
 #include <iostream>
 #include <map>
@@ -16,28 +18,38 @@
 #include <string>
 #include <vector>
 
-#include "imgui.h"
-#include "imgui_impl_sdl2.h"
-#include "imgui_impl_sdlrenderer2.h"
+static char newComponentName[50] = "";
+static int selectedComponent;
 
-#include "../Property.hpp"
-#include "../Template.hpp"
-
-void templatesWindow() {
-  ImGui::Begin("Templates");
+void componentsWindow() {
+  ImGui::Begin("Components");
   {
-    if (ImGui::Button("Create Template")) {
-      createTemplate();
+    if (ImGui::Button("Create New Component")) {
+      ImGui::OpenPopup("New Component Name Popup");
     }
 
-    ImGui::BeginChild("Templates Left Pane", ImVec2(150, 0),
+    if (ImGui::BeginPopup("New Component Name Popup")) {
+      ImGui::InputText("Component Name", newComponentName,
+                       IM_ARRAYSIZE(newComponentName));
+
+      if (ImGui::Button("Create")) {
+        if (strcmp(newComponentName, "")) {
+          components.push_back({newComponentName});
+          strcpy(newComponentName, "");
+        }
+      }
+
+      ImGui::EndPopup();
+    }
+
+    ImGui::BeginChild("Components Left Pane", ImVec2(150, 0),
                       ImGuiChildFlags_Border | ImGuiChildFlags_ResizeX);
     {
-      if (templates.size() > 0) {
-        for (int i = 0; i < templates.size(); i++) {
-          if (ImGui::Selectable(templates[i]->name.c_str(),
-                                selectedTemplate == i)) {
-            selectedTemplate = i;
+      if (components.size() > 0) {
+        for (int i = 0; i < components.size(); i++) {
+          if (ImGui::Selectable(components[i].name.c_str(),
+                                selectedComponent == i)) {
+            selectedComponent = i;
           }
         }
       }
@@ -47,34 +59,20 @@ void templatesWindow() {
     ImGui::SameLine();
 
     ImGui::BeginGroup();
-    if (templates.size() > 0) {
-      ImGui::BeginChild("Templates Right Pane",
+    if (components.size() > 0) {
+      ImGui::BeginChild("components Right Pane",
                         ImVec2(0, -ImGui::GetFrameHeightWithSpacing()));
-      ImGui::InputString("###Template name input",
-                         &templates[selectedTemplate]->name, 128,
-                         ImGuiInputTextFlags_None);
+      ImGui::Text(components[selectedComponent].name.c_str());
 
       if (ImGui::Button("Remove Template")) {
-        auto it = templates.begin() + selectedTemplate;
-        templates.erase(it);
-        delete *it;
-        selectedTemplate = 0;
+        auto it = components.begin() + selectedComponent;
+        components.erase(it);
+        selectedComponent = 0;
       }
 
       else {
-        auto &editorColor = templates[selectedTemplate]->editorColor;
-        ImGui::ColorEdit3("###EditorColorSelect", editorColor.data());
-
-        ImGui::InputFloat("Width", &templates[selectedTemplate]->width);
-        ImGui::InputFloat("Height", &templates[selectedTemplate]->height);
-
-        ImGui::Separator();
-
-        ImGui::Text("Components");
-        auto &properties = components[0].properties;
-
-        ImGui::Separator();
-        ImGui::Text(components[0].name.c_str());
+        ImGui::Text("Properties");
+        auto &properties = components[selectedComponent].properties;
 
         for (int i = 0; i < properties.size(); i++) {
           ImGui::TableNextColumn();
@@ -133,6 +131,23 @@ void templatesWindow() {
           }
           }
         }
+
+        int dropdownSelection = 0;
+        std::array<const char *, 7> dropdownOptions = {
+            "Add a Property", "Decimal",  "Integer", "Checkbox",
+            "Text",           "Filepath", "Color"};
+        if (ImGui::Combo("### Add prop dropdown", &dropdownSelection,
+                         dropdownOptions.data(), 7)) {
+          if (dropdownSelection != 0) {
+            Property *newProperty =
+                new Property((PropertyType)(dropdownSelection - 1));
+            components[selectedComponent].properties.push_back(newProperty);
+          }
+        }
+
+        ImGui::Separator();
+
+        ImGui::Text("Behaviour");
       }
       ImGui::EndChild();
     }

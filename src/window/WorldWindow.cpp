@@ -82,7 +82,7 @@ void worldWindow() {
 
       else {
         TemplateInstance instance =
-            TemplateInstance(&templates[selectedTemplate]);
+            TemplateInstance(templates[selectedTemplate]);
         instance.x = floor(mouse_pos_in_canvas.x / zoom / 16.0) * 16;
         instance.y = floor(mouse_pos_in_canvas.y / zoom / 16.0) * 16;
         templateInstances.push_back(instance);

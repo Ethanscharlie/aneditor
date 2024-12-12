@@ -8,6 +8,9 @@ struct Property;
 
 struct Template {
   Template(std::string name);
+
+  ~Template();
+
   std::string name;
   std::string mainComponent;
   float width = 16;

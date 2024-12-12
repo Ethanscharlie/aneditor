@@ -12,6 +12,7 @@
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_sdlrenderer2.h"
 #include "utils.hpp"
+#include "window/ComponentsWindow.hpp"
 #include "window/EditorSettings.hpp"
 #include "window/MenuBar.hpp"
 #include "window/TemplatesWindow.hpp"
@@ -86,8 +87,9 @@ int main(int argc, char *argv[]) {
 
     menuBar();
     worldWindow();
-    templatesWindow();
     editorSettings();
+    componentsWindow();
+    templatesWindow();
 
     ImGui::ShowDemoWindow();
 

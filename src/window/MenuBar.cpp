@@ -1,5 +1,6 @@
 #include "MenuBar.hpp"
 #include "../utils.hpp"
+#include "imgui.h"
 #include <cstdlib>
 #include <format>
 
@@ -15,8 +16,8 @@ void menuBar() {
       }
 
       if (ImGui::MenuItem("Run")) {
-        std::string command = std::format("cd {}; cd build; cmake ..; make; ./index",
-                                projectPath.string());
+        std::string command = std::format(
+            "cd {}; cd build; cmake ..; make; ./index", projectPath.string());
         std::system(command.c_str());
       }
 
