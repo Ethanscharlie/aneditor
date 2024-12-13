@@ -1,4 +1,5 @@
 #include "utils.hpp"
+#include "Component.hpp"
 #include "Template.hpp"
 #include <any>
 #include <format>
@@ -73,11 +74,18 @@ void loadProject(fs::path _projectPath) {
   cameraScale = editorData["cameraScale"];
   zoom = editorData["zoom"];
 
+  for (json &componentJson : editorData["components"]) {
+    Component newComponent = {componentJson["name"]};
+    newComponent.properties = componentJson["properties"];
+    components.push_back(newComponent);
+  }
+
   for (json &templateJson : editorData["Templates"]) {
     Template *entityTemplate = new Template(templateJson["name"]);
+    entityTemplate->components = templateJson["components"];
 
     if (editorData.contains("mainComponent")) {
-      entityTemplate->mainComponent = editorData["mainComponent"];
+      entityTemplate->components = editorData["components"];
     }
 
     templates.push_back(entityTemplate);
@@ -108,70 +116,39 @@ void loadProject(fs::path _projectPath) {
 }
 
 void save() {
-  // fs::path datafile = projectPath / "res" / "EditorData.json";
-  // json jsondata;
-  //
-  // jsondata["cameraScale"] = cameraScale;
-  // jsondata["zoom"] = zoom;
-  //
-  // for (Template* temp : templates) {
-  //   json templateJson;
-  //   templateJson["name"] = temp->name;
-  //   templateJson["mainComponent"] = temp->mainComponent;
-  //
-  //   for (Property *property : temp->properties) {
-  //     json propertyJson;
-  //     propertyJson["name"] = property->name;
-  //
-  //     switch (property->type) {
-  //     case PropertyType::Decimal:
-  //       propertyJson["value"] = std::any_cast<float>(property->value);
-  //       propertyJson["type"] = "Decimal";
-  //       break;
-  //     case PropertyType::Integer:
-  //       propertyJson["value"] = std::any_cast<int>(property->value);
-  //       propertyJson["type"] = "Integer";
-  //       break;
-  //     case PropertyType::Checkbox:
-  //       propertyJson["value"] = std::any_cast<bool>(property->value);
-  //       propertyJson["type"] = "Checkbox";
-  //       break;
-  //     case PropertyType::Text:
-  //       propertyJson["value"] = std::any_cast<std::string>(property->value);
-  //       propertyJson["type"] = "Text";
-  //       break;
-  //     case PropertyType::Filepath:
-  //       propertyJson = std::any_cast<std::string>(property->value);
-  //       propertyJson["type"] = "Filepath";
-  //       break;
-  //     case PropertyType::Color:
-  //       auto color = std::any_cast<std::array<float, 3>>(property->value);
-  //       propertyJson["value"]["r"] = color[0];
-  //       propertyJson["value"]["g"] = color[1];
-  //       propertyJson["value"]["b"] = color[2];
-  //       propertyJson["type"] = "Color";
-  //       break;
-  //     }
-  //
-  //     templateJson["Properties"].push_back(propertyJson);
-  //   }
-  //
-  //   jsondata["Templates"].push_back(templateJson);
-  // }
-  //
-  // for (TemplateInstance &instance : templateInstances) {
-  //   json instanceJson;
-  //   instanceJson["name"] = instance.entityTempate->name;
-  //   instanceJson["x"] = instance.x;
-  //   instanceJson["y"] = instance.y;
-  //   jsondata["instances"].push_back(instanceJson);
-  // }
-  //
-  // std::ofstream file(datafile);
-  // file << std::setw(2) << jsondata << std::endl;
-  // file.close();
-  // std::cout << std::format("Project save to {} Sucessfully\n",
-  //                          datafile.string());
+  fs::path datafile = projectPath / "res" / "EditorData.json";
+  json jsondata;
+
+  jsondata["cameraScale"] = cameraScale;
+  jsondata["zoom"] = zoom;
+
+  for (Template *temp : templates) {
+    json templateJson;
+    templateJson["name"] = temp->name;
+    templateJson["components"] = temp->components;
+    jsondata["Templates"].push_back(templateJson);
+  }
+
+  for (TemplateInstance &instance : templateInstances) {
+    json instanceJson;
+    instanceJson["name"] = instance.entityTempate->name;
+    instanceJson["x"] = instance.x;
+    instanceJson["y"] = instance.y;
+    jsondata["instances"].push_back(instanceJson);
+  }
+
+  for (Component &component : components) {
+    json componentJson;
+    componentJson["name"] = component.name;
+    componentJson["properties"] = component.properties;
+    jsondata["components"].push_back(componentJson);
+  }
+
+  std::ofstream file(datafile);
+  file << std::setw(2) << jsondata << std::endl;
+  file.close();
+  std::cout << std::format("Project save to {} Sucessfully\n",
+                           datafile.string());
 }
 
 void createTemplate() {

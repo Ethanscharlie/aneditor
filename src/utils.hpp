@@ -16,7 +16,7 @@ inline fs::path projectPath;
 inline int selectedTemplate;
 inline std::vector<Template *> templates;
 inline std::vector<TemplateInstance> templateInstances;
-inline std::vector<Component> components = {{"DefaultComp"}};
+inline std::vector<Component> components;
 inline float zoom = 4;
 inline int screenWidth = 1920;
 inline int screenHeight = 1080;
