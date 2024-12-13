@@ -74,10 +74,39 @@ void templatesWindow() {
         ImGui::Text("Components");
         ImGui::SameLine();
         if (ImGui::Button("Add Component")) {
-          json newComponentJson;
-          newComponentJson["name"] = components[0].name;
-          newComponentJson["properties"] = json::array();
-          templateComponents.push_back(newComponentJson);
+          ImGui::OpenPopup("Add Component Name Popup");
+        }
+
+        if (ImGui::BeginPopup("Add Component Name Popup")) {
+          int selectedIndex = -1;
+
+          for (int i = 0; i < components.size(); i++) {
+            Component &globalComponent = components[i];
+            bool alreadyHasComponent = false;
+
+            for (json &componentJson : templateComponents) {
+              const std::string &componentName = componentJson["name"];
+              if (componentName == globalComponent.name) {
+                alreadyHasComponent = true;
+              }
+            }
+
+            if (alreadyHasComponent)
+              continue;
+
+            if (ImGui::Selectable(globalComponent.name.c_str())) {
+              selectedIndex = i;
+            }
+          }
+
+          if (selectedIndex != -1) {
+            json newComponentJson;
+            newComponentJson["name"] = components[selectedIndex].name;
+            newComponentJson["properties"] = json::array();
+            templateComponents.push_back(newComponentJson);
+          }
+
+          ImGui::EndPopup();
         }
 
         for (json &componentJson : templateComponents) {
