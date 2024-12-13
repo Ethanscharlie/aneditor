@@ -1,10 +1,32 @@
 #include "utils.hpp"
 #include "Component.hpp"
 #include "Template.hpp"
+#include <SDL_image.h>
+#include <SDL_render.h>
 #include <any>
 #include <format>
 #include <fstream>
 #include <iostream>
+#include <string>
+
+static std::map<std::string, SDL_Texture *> textures;
+
+SDL_Texture *getTexture(std::string path) {
+  if (textures.contains(path)) {
+    return textures[path];
+  }
+
+  std::ifstream testIfFileExists(path);
+  if (!testIfFileExists) {
+    return nullptr;
+  }
+  testIfFileExists.close();
+
+  SDL_Texture *texture;
+  texture = IMG_LoadTexture(renderer, path.c_str());
+  textures[path] = texture;
+  return texture;
+}
 
 namespace ImGui {
 bool InputString(const char *label, std::string *strPtr, size_t bufferSize,
@@ -82,6 +104,8 @@ void loadProject(fs::path _projectPath) {
 
   for (json &templateJson : editorData["Templates"]) {
     Template *entityTemplate = new Template(templateJson["name"]);
+    entityTemplate->width = templateJson["width"];
+    entityTemplate->height = templateJson["height"];
     entityTemplate->components = templateJson["components"];
 
     if (editorData.contains("mainComponent")) {
@@ -126,6 +150,8 @@ void save() {
     json templateJson;
     templateJson["name"] = temp->name;
     templateJson["components"] = temp->components;
+    templateJson["width"] = temp->width;
+    templateJson["height"] = temp->height;
     jsondata["Templates"].push_back(templateJson);
   }
 
@@ -157,6 +183,30 @@ void createTemplate() {
   Template *entityTemplate = new Template("New Template");
   entityTemplate->mainComponent = "NewTemplate";
   templates.push_back(entityTemplate);
+}
+
+void removeComponentFiles(std::string name) {
+  fs::path sourceFolder = projectPath / "src";
+  fs::path headerFile = sourceFolder / std::format("{}.hpp", name);
+  fs::path sourceFile = sourceFolder / std::format("{}.cpp", name);
+
+  try {
+    if (std::filesystem::remove(headerFile))
+      std::cout << "header file " << headerFile << " deleted.\n";
+    else
+      std::cout << "header file " << headerFile << " not found.\n";
+  } catch (const std::filesystem::filesystem_error &err) {
+    std::cout << "filesystem error: " << err.what() << '\n';
+  }
+
+  try {
+    if (std::filesystem::remove(sourceFile))
+      std::cout << "source file " << sourceFile << " deleted.\n";
+    else
+      std::cout << "source file " << sourceFile << " not found.\n";
+  } catch (const std::filesystem::filesystem_error &err) {
+    std::cout << "filesystem error: " << err.what() << '\n';
+  }
 }
 
 void createComponentFiles(std::string name) {

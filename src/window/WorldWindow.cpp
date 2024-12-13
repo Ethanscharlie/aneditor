@@ -13,7 +13,8 @@ static void drawRect(int x, int y, int w, int h, ImColor color) {
   int realH = realY + h;
 
   ImDrawList *drawList = ImGui::GetWindowDrawList();
-  drawList->AddRectFilled(ImVec2(realX, realY), ImVec2(realW, realH), color);
+  drawList->AddRectFilled(ImVec2(realX, realY), ImVec2(realW, realH), color,
+                          30);
 }
 
 void worldWindow() {
@@ -81,11 +82,24 @@ void worldWindow() {
       }
 
       else {
-        TemplateInstance instance =
-            TemplateInstance(templates[selectedTemplate]);
-        instance.x = floor(mouse_pos_in_canvas.x / zoom / 16.0) * 16;
-        instance.y = floor(mouse_pos_in_canvas.y / zoom / 16.0) * 16;
-        templateInstances.push_back(instance);
+        int gridX = floor(mouse_pos_in_canvas.x / zoom / 16.0) * 16;
+        int gridY = floor(mouse_pos_in_canvas.y / zoom / 16.0) * 16;
+
+        if (selectedTemplate != -1) {
+          TemplateInstance instance =
+              TemplateInstance(templates[selectedTemplate]);
+          instance.x = gridX;
+          instance.y = gridY;
+          templateInstances.push_back(instance);
+        } else if (selectedTileLayer != -1) {
+          json &tileLayer = tileLayers[selectedTileLayer];
+          json &tiles = tileLayer["tiles"];
+
+          json newTileJson;
+          newTileJson["x"] = gridX;
+          newTileJson["y"] = gridY;
+          tiles.push_back(newTileJson);
+        }
       }
     }
 
@@ -151,6 +165,19 @@ void worldWindow() {
       };
 
       drawRect(x, y, w, h, color);
+    }
+
+    for (json &tileLayer : tileLayers) {
+      json &tiles = tileLayer["tiles"];
+      for (json &tile : tiles) {
+        int x = (int)tile["x"] * zoom + origin.x;
+        int y = (int)tile["y"] * zoom + origin.y;
+        int w = 16 * zoom;
+        int h = 16 * zoom;
+
+        ImColor color = {0, 0, 0};
+        drawRect(x, y, w, h, color);
+      }
     }
   }
   ImGui::End();

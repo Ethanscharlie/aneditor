@@ -36,7 +36,9 @@ void componentsWindow() {
       if (ImGui::Button("Create")) {
         if (strcmp(newComponentName, "")) {
           components.push_back({newComponentName});
-          createComponentFiles(newComponentName);
+          std::string componentNameNoSpaces =
+              std::regex_replace(newComponentName, std::regex("\\s+"), "");
+          createComponentFiles(componentNameNoSpaces);
           strcpy(newComponentName, "");
         }
       }
@@ -66,7 +68,10 @@ void componentsWindow() {
                         ImVec2(0, -ImGui::GetFrameHeightWithSpacing()));
       ImGui::Text(components[selectedComponent].name.c_str());
 
-      if (ImGui::Button("Remove Template")) {
+      if (ImGui::Button("Remove Component")) {
+        std::string componentNameNoSpaces = std::regex_replace(
+            components[selectedComponent].name, std::regex("\\s+"), "");
+        removeComponentFiles(componentNameNoSpaces);
         auto it = components.begin() + selectedComponent;
         components.erase(it);
         selectedComponent = 0;
@@ -141,8 +146,8 @@ void componentsWindow() {
         ImGui::Separator();
 
         ImGui::Text("Behaviour");
-        ImGui::EndChild();
       }
+      ImGui::EndChild();
     }
     ImGui::EndGroup();
   }

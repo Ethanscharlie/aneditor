@@ -16,10 +16,8 @@
 #include "window/EditorSettings.hpp"
 #include "window/MenuBar.hpp"
 #include "window/TemplatesWindow.hpp"
+#include "window/TilesWindow.hpp"
 #include "window/WorldWindow.hpp"
-
-SDL_Window *window;
-SDL_Renderer *renderer;
 
 void initSDL() {
   SDL_Init(SDL_INIT_VIDEO);
@@ -89,6 +87,7 @@ int main(int argc, char *argv[]) {
     worldWindow();
     editorSettings();
     componentsWindow();
+    tilesWindow();
     templatesWindow();
 
     ImGui::ShowDemoWindow();

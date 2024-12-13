@@ -46,7 +46,7 @@ void templatesWindow() {
     ImGui::SameLine();
 
     ImGui::BeginGroup();
-    if (templates.size() > 0) {
+    if (templates.size() > 0 && selectedTemplate != -1) {
       auto &templateComponents = templates[selectedTemplate]->components;
 
       ImGui::BeginChild("Templates Right Pane",
@@ -109,12 +109,21 @@ void templatesWindow() {
           ImGui::EndPopup();
         }
 
-        for (json &componentJson : templateComponents) {
+        for (int componentI = 0; componentI < templateComponents.size();
+             componentI++) {
+          json &componentJson = templateComponents[componentI];
           const std::string &componentName = componentJson["name"];
           json &properties = componentJson["properties"];
 
           ImGui::Separator();
           ImGui::Text(componentName.c_str());
+
+          ImGui::SameLine();
+          if (ImGui::Button(
+                  std::format("Remove Component {}", componentName).c_str())) {
+            auto it = templateComponents.begin() + componentI;
+            templateComponents.erase(it);
+          }
 
           // Find the global component
           auto it = std::find_if(components.begin(), components.end(),
