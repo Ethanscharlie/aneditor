@@ -155,12 +155,11 @@ void createTemplate() {
   fs::path sourceFolder = projectPath / "src";
 
   Template *entityTemplate = new Template("New Template");
-  createComponent("NewTemplate");
   entityTemplate->mainComponent = "NewTemplate";
   templates.push_back(entityTemplate);
 }
 
-void createComponent(std::string name) {
+void createComponentFiles(std::string name) {
   fs::path sourceFolder = projectPath / "src";
 
   std::ofstream headerFile(sourceFolder / std::format("{}.hpp", name));

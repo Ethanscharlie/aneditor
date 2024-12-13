@@ -36,6 +36,7 @@ void componentsWindow() {
       if (ImGui::Button("Create")) {
         if (strcmp(newComponentName, "")) {
           components.push_back({newComponentName});
+          createComponentFiles(newComponentName);
           strcpy(newComponentName, "");
         }
       }

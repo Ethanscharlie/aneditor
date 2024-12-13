@@ -34,6 +34,6 @@ void save();
 
 void createTemplate();
 
-void createComponent(std::string name);
+void createComponentFiles(std::string name);
 
 void createInput(json &property, std::string propertyType);
