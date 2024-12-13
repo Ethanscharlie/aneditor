@@ -58,40 +58,64 @@ void worldWindow() {
 
     // Add first and second point
     if (is_hovered && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-      TemplateInstance *hoverInstance = nullptr;
-      int hoverInstanceIndex = -1;
+      int gridX = floor(mouse_pos_in_canvas.x / zoom / 16.0) * 16;
+      int gridY = floor(mouse_pos_in_canvas.y / zoom / 16.0) * 16;
+      float mx = mouse_pos_in_canvas.x;
+      float my = mouse_pos_in_canvas.y;
 
-      for (int i = 0; i < templateInstances.size(); i++) {
-        TemplateInstance &instance = templateInstances[i];
-        float x = instance.x * zoom;
-        float y = instance.y * zoom;
-        float w = instance.entityTempate->width * zoom;
-        float h = instance.entityTempate->height * zoom;
+      if (selectedTemplate != -1) {
+        TemplateInstance *hoverInstance = nullptr;
+        int hoverInstanceIndex = -1;
 
-        float mx = mouse_pos_in_canvas.x;
-        float my = mouse_pos_in_canvas.y;
+        for (int i = 0; i < templateInstances.size(); i++) {
+          TemplateInstance &instance = templateInstances[i];
+          float x = instance.x * zoom;
+          float y = instance.y * zoom;
+          float w = instance.entityTempate->width * zoom;
+          float h = instance.entityTempate->height * zoom;
 
-        if (mx > x && mx < x + w && my > y && my < y + h) {
-          hoverInstance = &instance;
-          hoverInstanceIndex = i;
+          if (mx > x && mx < x + w && my > y && my < y + h) {
+            hoverInstance = &instance;
+            hoverInstanceIndex = i;
+          }
         }
-      }
 
-      if (hoverInstance != nullptr) {
-        templateInstances.erase(templateInstances.begin() + hoverInstanceIndex);
-      }
+        if (hoverInstance != nullptr) {
+          templateInstances.erase(templateInstances.begin() +
+                                  hoverInstanceIndex);
+        }
 
-      else {
-        int gridX = floor(mouse_pos_in_canvas.x / zoom / 16.0) * 16;
-        int gridY = floor(mouse_pos_in_canvas.y / zoom / 16.0) * 16;
+        else {
 
-        if (selectedTemplate != -1) {
           TemplateInstance instance =
               TemplateInstance(templates[selectedTemplate]);
           instance.x = gridX;
           instance.y = gridY;
           templateInstances.push_back(instance);
-        } else if (selectedTileLayer != -1) {
+        }
+      }
+
+      else if (selectedTileLayer != -1) {
+        bool hoveringHoverTile = false;
+
+        for (json &tileLayer : tileLayers) {
+          json &tiles = tileLayer["tiles"];
+          for (json &tile : tiles) {
+            int x = (int)tile["x"] * zoom;
+            int y = (int)tile["y"] * zoom;
+            int w = 16 * zoom;
+            int h = 16 * zoom;
+
+            if (mx > x && mx < x + w && my > y && my < y + h) {
+              hoveringHoverTile = true;
+              auto it = std::find(tiles.begin(), tiles.end(), tile);
+              tiles.erase(it);
+              break;
+            }
+          }
+        }
+
+        if (!hoveringHoverTile) {
           json &tileLayer = tileLayers[selectedTileLayer];
           json &tiles = tileLayer["tiles"];
 
@@ -151,6 +175,19 @@ void worldWindow() {
                        ImVec2(origin.x + cameraX, origin.y + cameraY + cameraH),
                        IM_COL32(255, 10, 10, 200));
 
+    for (json &tileLayer : tileLayers) {
+      json &tiles = tileLayer["tiles"];
+      for (json &tile : tiles) {
+        int x = (int)tile["x"] * zoom + origin.x;
+        int y = (int)tile["y"] * zoom + origin.y;
+        int w = 16 * zoom;
+        int h = 16 * zoom;
+
+        ImColor color = {0, 0, 0};
+        drawRect(x, y, w, h, color);
+      }
+    }
+
     // Entity instances
     for (TemplateInstance instance : templateInstances) {
       int x = instance.x * zoom + origin.x;
@@ -165,19 +202,6 @@ void worldWindow() {
       };
 
       drawRect(x, y, w, h, color);
-    }
-
-    for (json &tileLayer : tileLayers) {
-      json &tiles = tileLayer["tiles"];
-      for (json &tile : tiles) {
-        int x = (int)tile["x"] * zoom + origin.x;
-        int y = (int)tile["y"] * zoom + origin.y;
-        int w = 16 * zoom;
-        int h = 16 * zoom;
-
-        ImColor color = {0, 0, 0};
-        drawRect(x, y, w, h, color);
-      }
     }
   }
   ImGui::End();
