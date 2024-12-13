@@ -1,5 +1,4 @@
 #include "utils.hpp"
-#include "Property.hpp"
 #include "Template.hpp"
 #include <any>
 #include <format>
@@ -75,7 +74,7 @@ void loadProject(fs::path _projectPath) {
   zoom = editorData["zoom"];
 
   for (json &templateJson : editorData["Templates"]) {
-    Template* entityTemplate = new Template(templateJson["name"]);
+    Template *entityTemplate = new Template(templateJson["name"]);
 
     if (editorData.contains("mainComponent")) {
       entityTemplate->mainComponent = editorData["mainComponent"];
@@ -88,7 +87,7 @@ void loadProject(fs::path _projectPath) {
     std::string name = instanceJson["name"];
 
     Template *entityTemplate;
-    for (Template* aTemplate : templates) {
+    for (Template *aTemplate : templates) {
       if (aTemplate->name == name) {
         entityTemplate = aTemplate;
         break;
@@ -109,76 +108,76 @@ void loadProject(fs::path _projectPath) {
 }
 
 void save() {
-  fs::path datafile = projectPath / "res" / "EditorData.json";
-  json jsondata;
-
-  jsondata["cameraScale"] = cameraScale;
-  jsondata["zoom"] = zoom;
-
-  for (Template* temp : templates) {
-    json templateJson;
-    templateJson["name"] = temp->name;
-    templateJson["mainComponent"] = temp->mainComponent;
-
-    for (Property *property : temp->properties) {
-      json propertyJson;
-      propertyJson["name"] = property->name;
-
-      switch (property->type) {
-      case PropertyType::Decimal:
-        propertyJson["value"] = std::any_cast<float>(property->value);
-        propertyJson["type"] = "Decimal";
-        break;
-      case PropertyType::Integer:
-        propertyJson["value"] = std::any_cast<int>(property->value);
-        propertyJson["type"] = "Integer";
-        break;
-      case PropertyType::Checkbox:
-        propertyJson["value"] = std::any_cast<bool>(property->value);
-        propertyJson["type"] = "Checkbox";
-        break;
-      case PropertyType::Text:
-        propertyJson["value"] = std::any_cast<std::string>(property->value);
-        propertyJson["type"] = "Text";
-        break;
-      case PropertyType::Filepath:
-        propertyJson = std::any_cast<std::string>(property->value);
-        propertyJson["type"] = "Filepath";
-        break;
-      case PropertyType::Color:
-        auto color = std::any_cast<std::array<float, 3>>(property->value);
-        propertyJson["value"]["r"] = color[0];
-        propertyJson["value"]["g"] = color[1];
-        propertyJson["value"]["b"] = color[2];
-        propertyJson["type"] = "Color";
-        break;
-      }
-
-      templateJson["Properties"].push_back(propertyJson);
-    }
-
-    jsondata["Templates"].push_back(templateJson);
-  }
-
-  for (TemplateInstance &instance : templateInstances) {
-    json instanceJson;
-    instanceJson["name"] = instance.entityTempate->name;
-    instanceJson["x"] = instance.x;
-    instanceJson["y"] = instance.y;
-    jsondata["instances"].push_back(instanceJson);
-  }
-
-  std::ofstream file(datafile);
-  file << std::setw(2) << jsondata << std::endl;
-  file.close();
-  std::cout << std::format("Project save to {} Sucessfully\n",
-                           datafile.string());
+  // fs::path datafile = projectPath / "res" / "EditorData.json";
+  // json jsondata;
+  //
+  // jsondata["cameraScale"] = cameraScale;
+  // jsondata["zoom"] = zoom;
+  //
+  // for (Template* temp : templates) {
+  //   json templateJson;
+  //   templateJson["name"] = temp->name;
+  //   templateJson["mainComponent"] = temp->mainComponent;
+  //
+  //   for (Property *property : temp->properties) {
+  //     json propertyJson;
+  //     propertyJson["name"] = property->name;
+  //
+  //     switch (property->type) {
+  //     case PropertyType::Decimal:
+  //       propertyJson["value"] = std::any_cast<float>(property->value);
+  //       propertyJson["type"] = "Decimal";
+  //       break;
+  //     case PropertyType::Integer:
+  //       propertyJson["value"] = std::any_cast<int>(property->value);
+  //       propertyJson["type"] = "Integer";
+  //       break;
+  //     case PropertyType::Checkbox:
+  //       propertyJson["value"] = std::any_cast<bool>(property->value);
+  //       propertyJson["type"] = "Checkbox";
+  //       break;
+  //     case PropertyType::Text:
+  //       propertyJson["value"] = std::any_cast<std::string>(property->value);
+  //       propertyJson["type"] = "Text";
+  //       break;
+  //     case PropertyType::Filepath:
+  //       propertyJson = std::any_cast<std::string>(property->value);
+  //       propertyJson["type"] = "Filepath";
+  //       break;
+  //     case PropertyType::Color:
+  //       auto color = std::any_cast<std::array<float, 3>>(property->value);
+  //       propertyJson["value"]["r"] = color[0];
+  //       propertyJson["value"]["g"] = color[1];
+  //       propertyJson["value"]["b"] = color[2];
+  //       propertyJson["type"] = "Color";
+  //       break;
+  //     }
+  //
+  //     templateJson["Properties"].push_back(propertyJson);
+  //   }
+  //
+  //   jsondata["Templates"].push_back(templateJson);
+  // }
+  //
+  // for (TemplateInstance &instance : templateInstances) {
+  //   json instanceJson;
+  //   instanceJson["name"] = instance.entityTempate->name;
+  //   instanceJson["x"] = instance.x;
+  //   instanceJson["y"] = instance.y;
+  //   jsondata["instances"].push_back(instanceJson);
+  // }
+  //
+  // std::ofstream file(datafile);
+  // file << std::setw(2) << jsondata << std::endl;
+  // file.close();
+  // std::cout << std::format("Project save to {} Sucessfully\n",
+  //                          datafile.string());
 }
 
 void createTemplate() {
   fs::path sourceFolder = projectPath / "src";
 
-  Template* entityTemplate = new Template("New Template");
+  Template *entityTemplate = new Template("New Template");
   createComponent("NewTemplate");
   entityTemplate->mainComponent = "NewTemplate";
   templates.push_back(entityTemplate);
@@ -206,4 +205,40 @@ void createComponent(std::string name) {
   sourceFile << "void " << name << "::start() {}" << std::endl;
   sourceFile << "void " << name << "::update(float deltaTime) {}" << std::endl;
   sourceFile.close();
+}
+
+void createInput(json &property, std::string propertyType) {
+  std::string i = property["name"];
+  if (propertyType == "Decimal" && property["value"].is_number_float()) {
+    double &value = property["value"].get_ref<double &>();
+    ImGui::InputFloat(std::format("###PropValue{}", i).c_str(),
+                      &(float &)value);
+  }
+  if (propertyType == "Integer" && property["value"].is_number_integer()) {
+    int &value = (int &)property["value"].get_ref<std::int64_t &>();
+    ImGui::InputInt(std::format("###PropValue{}", i).c_str(), &value);
+  }
+  if (propertyType == "Checkbox" && property["value"].is_boolean()) {
+    bool &value = property["value"].get_ref<bool &>();
+    ImGui::Checkbox(std::format("###PropValueIn{}", i).c_str(), &value);
+  }
+  if (propertyType == "Text" && property["value"].is_string()) {
+    std::string &value = property["value"].get_ref<std::string &>();
+    ImGui::InputString(std::format("###String InputIn {}", i).c_str(), &value,
+                       128, ImGuiInputTextFlags_None);
+  }
+  if (propertyType == "Filepath" && property["value"].is_string()) {
+    std::string &value = property["value"].get_ref<std::string &>();
+    ImGui::InputString(std::format("###String InputIn {}", i).c_str(), &value,
+                       128, ImGuiInputTextFlags_None);
+  }
+  if (propertyType == "Color") {
+    json &value = property["value"];
+    float &r = (float &)value["r"].get_ref<double &>();
+    float &g = (float &)value["g"].get_ref<double &>();
+    float &b = (float &)value["b"].get_ref<double &>();
+    std::array<float *, 3> color = {&r, &g, &b};
+    ImGui::ColorEdit3(std::format("###Color Input {}", i).c_str(),
+                      *color.data());
+  }
 }

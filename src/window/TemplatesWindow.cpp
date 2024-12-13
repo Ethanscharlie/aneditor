@@ -20,7 +20,6 @@
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_sdlrenderer2.h"
 
-#include "../Property.hpp"
 #include "../Template.hpp"
 
 void templatesWindow() {
@@ -48,6 +47,8 @@ void templatesWindow() {
 
     ImGui::BeginGroup();
     if (templates.size() > 0) {
+      auto &templateComponents = templates[selectedTemplate]->components;
+
       ImGui::BeginChild("Templates Right Pane",
                         ImVec2(0, -ImGui::GetFrameHeightWithSpacing()));
       ImGui::InputString("###Template name input",
@@ -71,66 +72,70 @@ void templatesWindow() {
         ImGui::Separator();
 
         ImGui::Text("Components");
-        auto &properties = components[0].properties;
+        ImGui::SameLine();
+        if (ImGui::Button("Add Component")) {
+          json newComponentJson;
+          newComponentJson["name"] = components[0].name;
+          newComponentJson["properties"] = json::array();
+          templateComponents.push_back(newComponentJson);
+        }
 
-        ImGui::Separator();
-        ImGui::Text(components[0].name.c_str());
+        for (json &componentJson : templateComponents) {
+          const std::string &componentName = componentJson["name"];
+          json &properties = componentJson["properties"];
 
-        for (int i = 0; i < properties.size(); i++) {
-          ImGui::TableNextColumn();
-          Property &property = *properties[i];
+          ImGui::Separator();
+          ImGui::Text(componentName.c_str());
 
-          if (ImGui::Button(std::format("-###RemoveButton{}", i).c_str())) {
-            std::vector<Property *>::iterator it = properties.begin() + i;
-            properties.erase(it);
-            std::cout << std::format("{}\n", properties.size());
-            delete *it;
-            i--;
-            continue;
+          // Find the global component
+          auto it = std::find_if(components.begin(), components.end(),
+                                 [&componentName](const Component &component) {
+                                   return component.name == componentName;
+                                 });
+          Component &globalComponent = *it;
+
+          // Ensure it has all of the proper components
+          for (const json &globalProperty : globalComponent.properties) {
+            bool componentAlreadyHasProperty = false;
+
+            for (const json &property : properties) {
+              if (property["name"] == globalProperty["name"]) {
+                componentAlreadyHasProperty = true;
+                break;
+              }
+            }
+
+            if (!componentAlreadyHasProperty)
+              properties.push_back(globalProperty);
           }
 
-          ImGui::SameLine();
+          // Trash removed properties
+          for (int i = 0; i < properties.size(); i++) {
+            const json &property = properties[i];
+            bool globalProptertyExists = false;
 
-          ImGui::SetNextItemWidth(100.0f);
-          ImGui::InputString(std::format("###String Input {}", i).c_str(),
-                             &property.name, 128, ImGuiInputTextFlags_None);
+            for (const json &globalProperty : globalComponent.properties) {
+              if (property["name"] == globalProperty["name"]) {
+                globalProptertyExists = true;
+                break;
+              }
+            }
 
-          ImGui::SameLine();
+            if (!globalProptertyExists) {
+              auto it = properties.begin() + i;
+              properties.erase(it);
+            }
+          }
 
-          switch (property.type) {
-          case PropertyType::Decimal: {
-            float &value = std::any_cast<float &>(property.value);
-            ImGui::InputFloat(std::format("###PropValue{}", i).c_str(), &value);
-            break;
-          }
-          case PropertyType::Integer: {
-            ImGui::InputInt(std::format("###PropValue{}", i).c_str(),
-                            &std::any_cast<int &>(property.value));
-            break;
-          }
-          case PropertyType::Checkbox: {
-            ImGui::Checkbox(std::format("###PropValueIn{}", i).c_str(),
-                            &std::any_cast<bool &>(property.value));
-            break;
-          }
-          case PropertyType::Text: {
-            ImGui::InputString(std::format("###String InputIn {}", i).c_str(),
-                               &std::any_cast<std::string &>(property.value),
-                               128, ImGuiInputTextFlags_None);
-            break;
-          }
-          case PropertyType::Filepath: {
-            ImGui::InputString(std::format("###String InputIn {}", i).c_str(),
-                               &std::any_cast<std::string &>(property.value),
-                               128, ImGuiInputTextFlags_None);
-            break;
-          }
-          case PropertyType::Color: {
-            auto &color = std::any_cast<std::array<float, 3> &>(property.value);
-            ImGui::ColorEdit3(std::format("###Color Input {}", i).c_str(),
-                              color.data());
-            break;
-          }
+          for (int i = 0; i < properties.size(); i++) {
+            ImGui::TableNextColumn();
+            json &property = properties[i];
+
+            ImGui::Text(property["name"].get<std::string>().c_str());
+
+            ImGui::SameLine();
+
+            createInput(property, property["type"]);
           }
         }
       }

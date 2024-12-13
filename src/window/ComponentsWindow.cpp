@@ -1,5 +1,6 @@
 #include "ComponentsWindow.hpp"
 #include "../utils.hpp"
+#include "detail/value_t.hpp"
 #include "imgui.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
@@ -72,64 +73,31 @@ void componentsWindow() {
 
       else {
         ImGui::Text("Properties");
-        auto &properties = components[selectedComponent].properties;
+        json &properties = components[selectedComponent].properties;
 
         for (int i = 0; i < properties.size(); i++) {
           ImGui::TableNextColumn();
-          Property &property = *properties[i];
+          json &property = properties[i];
 
           if (ImGui::Button(std::format("-###RemoveButton{}", i).c_str())) {
-            std::vector<Property *>::iterator it = properties.begin() + i;
+            auto it = properties.begin() + i;
             properties.erase(it);
             std::cout << std::format("{}\n", properties.size());
-            delete *it;
             i--;
             continue;
           }
 
           ImGui::SameLine();
 
+          std::string &propertyName = property["name"].get_ref<std::string &>();
           ImGui::SetNextItemWidth(100.0f);
           ImGui::InputString(std::format("###String Input {}", i).c_str(),
-                             &property.name, 128, ImGuiInputTextFlags_None);
+                             &propertyName, 128, ImGuiInputTextFlags_None);
 
           ImGui::SameLine();
 
-          switch (property.type) {
-          case PropertyType::Decimal: {
-            float &value = std::any_cast<float &>(property.value);
-            ImGui::InputFloat(std::format("###PropValue{}", i).c_str(), &value);
-            break;
-          }
-          case PropertyType::Integer: {
-            ImGui::InputInt(std::format("###PropValue{}", i).c_str(),
-                            &std::any_cast<int &>(property.value));
-            break;
-          }
-          case PropertyType::Checkbox: {
-            ImGui::Checkbox(std::format("###PropValueIn{}", i).c_str(),
-                            &std::any_cast<bool &>(property.value));
-            break;
-          }
-          case PropertyType::Text: {
-            ImGui::InputString(std::format("###String InputIn {}", i).c_str(),
-                               &std::any_cast<std::string &>(property.value),
-                               128, ImGuiInputTextFlags_None);
-            break;
-          }
-          case PropertyType::Filepath: {
-            ImGui::InputString(std::format("###String InputIn {}", i).c_str(),
-                               &std::any_cast<std::string &>(property.value),
-                               128, ImGuiInputTextFlags_None);
-            break;
-          }
-          case PropertyType::Color: {
-            auto &color = std::any_cast<std::array<float, 3> &>(property.value);
-            ImGui::ColorEdit3(std::format("###Color Input {}", i).c_str(),
-                              color.data());
-            break;
-          }
-          }
+          std::string propertyType = property["type"];
+          createInput(property, propertyType);
         }
 
         int dropdownSelection = 0;
@@ -139,17 +107,41 @@ void componentsWindow() {
         if (ImGui::Combo("### Add prop dropdown", &dropdownSelection,
                          dropdownOptions.data(), 7)) {
           if (dropdownSelection != 0) {
-            Property *newProperty =
-                new Property((PropertyType)(dropdownSelection - 1));
-            components[selectedComponent].properties.push_back(newProperty);
+            json propertyJson;
+            propertyJson["name"] = "NewProperty";
+            propertyJson["type"] = dropdownOptions[dropdownSelection];
+
+            std::string propertyType = propertyJson["type"];
+            if (propertyType == "Decimal") {
+              propertyJson["value"] = 0.0;
+            }
+            if (propertyType == "Integer") {
+              propertyJson["value"] = 0;
+            }
+            if (propertyType == "Checkbox") {
+              propertyJson["value"] = false;
+            }
+            if (propertyType == "Text") {
+              propertyJson["value"] = "";
+            }
+            if (propertyType == "Filepath") {
+              propertyJson["value"] = "";
+            }
+            if (propertyType == "Color") {
+              propertyJson["value"]["r"] = 255.0;
+              propertyJson["value"]["g"] = 255.0;
+              propertyJson["value"]["b"] = 255.0;
+            }
+
+            components[selectedComponent].properties.push_back(propertyJson);
           }
         }
 
         ImGui::Separator();
 
         ImGui::Text("Behaviour");
+        ImGui::EndChild();
       }
-      ImGui::EndChild();
     }
     ImGui::EndGroup();
   }

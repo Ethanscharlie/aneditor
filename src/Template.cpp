@@ -1,5 +1,4 @@
 #include "Template.hpp"
-#include "Property.hpp"
 #include "utils.hpp"
 
 Template::Template(std::string name) : name(name) {}
@@ -13,10 +12,4 @@ Template::~Template() {
       i--;
     }
   }
-
-  for (Property *property : properties) {
-    delete property;
-  }
-
-  properties.clear();
 }
