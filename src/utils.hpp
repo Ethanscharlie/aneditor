@@ -28,6 +28,7 @@ inline float zoom = 4;
 inline int screenWidth = 1920;
 inline int screenHeight = 1080;
 inline float cameraScale = 2;
+inline json selectedTile;
 
 namespace ImGui {
 bool InputString(const char *label, std::string *strPtr, size_t bufferSize,

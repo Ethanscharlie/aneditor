@@ -93,7 +93,9 @@ static void layerInfoPanel() {
                                        ImVec2(40, 40), uv0, uv1);
 
       if (button) {
-        // selectedGridTile.srcRect = {tileX, tileY, 16.0, 16.0};
+        selectedTile["x"] = tileX;
+        selectedTile["y"] = tileY;
+        selectedTile["texture"] = texturePath;
       }
 
       ImGui::SameLine();

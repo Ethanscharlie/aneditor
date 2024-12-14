@@ -3,6 +3,7 @@
 #include "../TemplateInstance.hpp"
 #include "../utils.hpp"
 #include "imgui.h"
+#include <SDL_render.h>
 #include <cmath>
 #include <cstdio>
 
@@ -15,6 +16,56 @@ static void drawRect(int x, int y, int w, int h, ImColor color) {
   ImDrawList *drawList = ImGui::GetWindowDrawList();
   drawList->AddRectFilled(ImVec2(realX, realY), ImVec2(realW, realH), color,
                           30);
+}
+
+static bool checkIfHoveringOverTile(float mx, float my, bool erase = false) {
+  for (json &tileLayer : tileLayers) {
+    json &tiles = tileLayer["tiles"];
+    for (json &tile : tiles) {
+      int x = (int)tile["x"] * zoom;
+      int y = (int)tile["y"] * zoom;
+      int w = 16 * zoom;
+      int h = 16 * zoom;
+
+      if (mx > x && mx < x + w && my > y && my < y + h) {
+        if (erase) {
+          auto it = std::find(tiles.begin(), tiles.end(), tile);
+          tiles.erase(it);
+        }
+
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+static bool checkIfHoveringTemplate(float mx, float my, bool erase = false) {
+  TemplateInstance *hoverInstance = nullptr;
+  int hoverInstanceIndex = -1;
+
+  for (int i = 0; i < templateInstances.size(); i++) {
+    TemplateInstance &instance = templateInstances[i];
+    float x = instance.x * zoom;
+    float y = instance.y * zoom;
+    float w = instance.entityTempate->width * zoom;
+    float h = instance.entityTempate->height * zoom;
+
+    if (mx > x && mx < x + w && my > y && my < y + h) {
+      hoverInstance = &instance;
+      hoverInstanceIndex = i;
+    }
+  }
+
+  if (hoverInstance != nullptr) {
+    if (erase) {
+      templateInstances.erase(templateInstances.begin() + hoverInstanceIndex);
+    }
+    return true;
+  }
+
+  return false;
 }
 
 void worldWindow() {
@@ -49,80 +100,59 @@ void worldWindow() {
     ImGui::InvisibleButton("canvas", canvas_sz,
                            ImGuiButtonFlags_MouseButtonLeft |
                                ImGuiButtonFlags_MouseButtonRight);
-    const bool is_hovered = ImGui::IsItemHovered(); // Hovered
-    const bool is_active = ImGui::IsItemActive();   // Held
+    bool is_hovered = ImGui::IsItemHovered(); // Hovered
+    // bool is_active = ImGui::IsItemActive();   // Held
+    bool is_active = ImGui::GetIO().KeysDown[ImGuiKey_Space];
+
     const ImVec2 origin(canvas_p0.x + scrolling.x,
                         canvas_p0.y + scrolling.y); // Lock scrolled origin
     const ImVec2 mouse_pos_in_canvas(io.MousePos.x - origin.x,
                                      io.MousePos.y - origin.y);
 
-    // Add first and second point
-    if (is_hovered && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-      int gridX = floor(mouse_pos_in_canvas.x / zoom / 16.0) * 16;
-      int gridY = floor(mouse_pos_in_canvas.y / zoom / 16.0) * 16;
-      float mx = mouse_pos_in_canvas.x;
-      float my = mouse_pos_in_canvas.y;
+    int gridX = floor(mouse_pos_in_canvas.x / zoom / 16.0) * 16;
+    int gridY = floor(mouse_pos_in_canvas.y / zoom / 16.0) * 16;
+    float mx = mouse_pos_in_canvas.x;
+    float my = mouse_pos_in_canvas.y;
 
+    if (!is_active && is_hovered) {
       if (selectedTemplate != -1) {
-        TemplateInstance *hoverInstance = nullptr;
-        int hoverInstanceIndex = -1;
-
-        for (int i = 0; i < templateInstances.size(); i++) {
-          TemplateInstance &instance = templateInstances[i];
-          float x = instance.x * zoom;
-          float y = instance.y * zoom;
-          float w = instance.entityTempate->width * zoom;
-          float h = instance.entityTempate->height * zoom;
-
-          if (mx > x && mx < x + w && my > y && my < y + h) {
-            hoverInstance = &instance;
-            hoverInstanceIndex = i;
-          }
-        }
-
-        if (hoverInstance != nullptr) {
-          templateInstances.erase(templateInstances.begin() +
-                                  hoverInstanceIndex);
-        }
-
-        else {
-
-          TemplateInstance instance =
-              TemplateInstance(templates[selectedTemplate]);
-          instance.x = gridX;
-          instance.y = gridY;
-          templateInstances.push_back(instance);
+        if (ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
+          checkIfHoveringTemplate(mx, my, true);
         }
       }
 
       else if (selectedTileLayer != -1) {
-        bool hoveringHoverTile = false;
+        if (ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
+          checkIfHoveringOverTile(mx, my, true);
+        }
+      }
+    }
 
-        for (json &tileLayer : tileLayers) {
-          json &tiles = tileLayer["tiles"];
-          for (json &tile : tiles) {
-            int x = (int)tile["x"] * zoom;
-            int y = (int)tile["y"] * zoom;
-            int w = 16 * zoom;
-            int h = 16 * zoom;
-
-            if (mx > x && mx < x + w && my > y && my < y + h) {
-              hoveringHoverTile = true;
-              auto it = std::find(tiles.begin(), tiles.end(), tile);
-              tiles.erase(it);
-              break;
-            }
+    if (!is_active && is_hovered) {
+      if (selectedTemplate != -1) {
+        if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+          if (!checkIfHoveringTemplate(mx, my)) {
+            TemplateInstance instance =
+                TemplateInstance(templates[selectedTemplate]);
+            instance.x = gridX;
+            instance.y = gridY;
+            templateInstances.push_back(instance);
           }
         }
+      }
 
-        if (!hoveringHoverTile) {
-          json &tileLayer = tileLayers[selectedTileLayer];
-          json &tiles = tileLayer["tiles"];
+      else if (selectedTileLayer != -1) {
+        if (ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
+          if (!checkIfHoveringOverTile(mx, my)) {
+            json &tileLayer = tileLayers[selectedTileLayer];
+            json &tiles = tileLayer["tiles"];
 
-          json newTileJson;
-          newTileJson["x"] = gridX;
-          newTileJson["y"] = gridY;
-          tiles.push_back(newTileJson);
+            json newTileJson;
+            newTileJson["x"] = gridX;
+            newTileJson["y"] = gridY;
+            newTileJson["image"] = selectedTile;
+            tiles.push_back(newTileJson);
+          }
         }
       }
     }
@@ -132,7 +162,7 @@ void worldWindow() {
     // mouse is hovering something etc.
     const float mouse_threshold_for_pan =
         opt_enable_context_menu ? -1.0f : 0.0f;
-    if (is_active && ImGui::IsMouseDragging(ImGuiMouseButton_Right,
+    if (is_active && ImGui::IsMouseDragging(ImGuiMouseButton_Left,
                                             mouse_threshold_for_pan)) {
       scrolling.x += io.MouseDelta.x;
       scrolling.y += io.MouseDelta.y;
@@ -180,11 +210,29 @@ void worldWindow() {
       for (json &tile : tiles) {
         int x = (int)tile["x"] * zoom + origin.x;
         int y = (int)tile["y"] * zoom + origin.y;
-        int w = 16 * zoom;
-        int h = 16 * zoom;
+        int w = x + 16 * zoom;
+        int h = y + 16 * zoom;
 
-        ImColor color = {0, 0, 0};
-        drawRect(x, y, w, h, color);
+        json &imageData = tile["image"];
+
+        SDL_Texture *texture = getTexture(imageData["texture"]);
+        ImTextureID textureID = (ImTextureID)texture;
+
+        int tileX = imageData["x"];
+        int tileY = imageData["y"];
+
+        int textureWidth;
+        int textureHeight;
+        SDL_QueryTexture(texture, nullptr, nullptr, &textureWidth,
+                         &textureHeight);
+
+        ImVec2 uv0 =
+            ImVec2((float)tileX / textureWidth, (float)tileY / textureHeight);
+        ImVec2 uv1 = ImVec2((float)(tileX + 16) / textureWidth,
+                            (float)(tileY + 16) / textureHeight);
+
+        ImDrawList *drawList = ImGui::GetWindowDrawList();
+        drawList->AddImage(textureID, ImVec2(x, y), ImVec2(w, h), uv0, uv1);
       }
     }
 
